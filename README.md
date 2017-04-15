@@ -4,7 +4,7 @@ Control a Selenium Driver using INI files.
 ## Template File (.ini)
 Each template file represents a flow within the browser.
 
-![Demo](https://github.com/rascoro1/recterm/blob/master/github.gif)
+![Demo](https://github.com/rascoro1/SeleniumINI/blob/master/demo.gif)
 
 ### General
 General section is where we can modify general attributes. <br />
