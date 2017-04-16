@@ -1,5 +1,6 @@
 import errors
 import time
+from bcolors import bcolors
 
 def str_to_boolean(string):
     """
@@ -33,6 +34,8 @@ class Section():
         "is_displayed",
         "is_enabled",
         "is_selected",
+        "start_split",
+        "end_split",
         "start_wait",
         "between_wait",
         "between_action_wait"
@@ -40,12 +43,16 @@ class Section():
 
     def __init__(self):
         self.name = None
+        self.element = None
         self.template = None
         self.attr_xpath = False
+        self.report = False
         self.url = False
         self.text = False
         self.clear = False
         self.send_keys = False
+        self.start_split = False
+        self.end_split = False
         self.get_attribute = False
         self.is_displayed = False
         self.is_enabled = False
@@ -100,6 +107,7 @@ class Section():
 
         element = self.find_element()
         if element is not None:
+            self.element = element
             report['found'] = True
 
             if self.send_keys is not False:
@@ -173,7 +181,7 @@ class Section():
                     report['is_selected'] = res
                 except:
                     report['is_selected'] = False
-
+        self.report = report
         return report
 
     def find_element(self):
@@ -187,3 +195,31 @@ class Section():
         except:
             element = None
         return element
+
+    def pprint(self, exclude_none=False):
+        if self.report is not False:
+            if self.report['found'] is True:
+                print bcolors.OKGREEN + "##########################"
+                print self.name
+                print "##########################" + bcolors.ENDC
+            else:
+                print bcolors.FAIL + "##########################"
+                print self.name
+                print "##########################" + bcolors.ENDC
+
+            for key in self.report:
+                value = self.report[key]
+                color = bcolors.ENDC
+                if value is None:
+                    color = bcolors.OKBLUE
+                elif value is True:
+                    color = bcolors.OKGREEN
+                elif value is False:
+                    color = bcolors.FAIL
+                if exclude_none is False:
+                    print "{}\t{}: {}{}".format(color, key, value, bcolors.ENDC)
+                elif value is not None and exclude_none is True:
+                    print "{}\t{}: {}{}".format(color, key, value, bcolors.ENDC)
+        else:
+            print "Please execute the section before pprinting it."
+

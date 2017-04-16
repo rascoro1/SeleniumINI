@@ -44,13 +44,16 @@ class Template():
         """
         self.file_path = path
 
-
     def start_driver(self):
         """
         This starts the webdriver and goes to the url specified in the template
         """
         self.driver = webdriver.Chrome(DRIVER_PATH)
         self.driver.get(self.general.url)
+
+    def stop_driver(self):
+        self.driver.quit()
+        self.driver = None
 
     def load_sections(self):
         """
@@ -86,9 +89,12 @@ class Template():
 
         self.report = report
 
+        print "Closing the Browser/Driver"
+        self.stop_driver()
+
         return report
 
-    def pprint(self, exclude_none = False):
+    def pprint(self, exclude_none=False):
         """
         pretty print the report with nice and preetttyyy collors
         """
@@ -96,25 +102,5 @@ class Template():
             print "No report to print please run the template"
         else:
             for section_name in self.exec_order:
-                if self.report[section_name]['found'] is True:
-                    print bcolors.OKGREEN + "##########################"
-                    print section_name
-                    print "##########################" + bcolors.ENDC
-                else:
-                    print bcolors.FAIL + "##########################"
-                    print section_name
-                    print "##########################" + bcolors.ENDC
-
-                for key in self.report[section_name]:
-                    value = self.report[section_name][key]
-                    color = bcolors.ENDC
-                    if value is None:
-                        color = bcolors.OKBLUE
-                    elif value is True:
-                        color = bcolors.OKGREEN
-                    elif value is False:
-                        color = bcolors.FAIL
-                    if exclude_none is False:
-                        print "{}\t{}: {}{}".format(color, key, value, bcolors.ENDC)
-                    elif value is not None and exclude_none is True:
-                        print "{}\t{}: {}{}".format(color, key, value, bcolors.ENDC)
+                o_sec = getattr(self, section_name)
+                o_sec.pprint(exclude_none=exclude_none)
