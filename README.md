@@ -51,7 +51,65 @@ Example:
   send_keys=rascoro1
   submit=True
 ```
+## Using the SeleniumINI CLI
+This was created to make running tests even easier than before.
+With the SeleniumINI CLI we can run template files directly from the terminal.
+Also I added functionality for dynamic templates, batch template exectuion and concurrent tests.
 
+```
+usage: SeleniumINICLI.py [-h] [-b] [-c] [-d DYNAMIC] [-e] [-i INPUT_FILE] [-k]
+                         [-o OUTPUT_FILE] [-p]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -b, --batch           Creating report from a batch amount of templates
+  -c, --concurrent      Only used when the --batch flag has been used, speficy
+                        the amount of concurrent browsers should be running at
+                        once.
+  -d DYNAMIC, --dynamic DYNAMIC
+                        If you incorporated dynamic variables in you template
+                        ini. Declare them here in a string in python diction
+                        form. e.g. '{"url": "something.com"}'
+  -e, --exclude         Will exclude element actions that were not performed.
+  -i INPUT_FILE, --input-file INPUT_FILE
+                        The file of the template file
+  -k, --keep-temps      Keep temporary files that were created by
+                        SeleniumINIDriver
+  -o OUTPUT_FILE, --output-file OUTPUT_FILE
+                        The report outputted to a file
+  -p, --pprint          The report pretty printed to terminal
+
+```
+#### Running a Static Template
+```
+SeleniumINICLI.py -i my_github.ini
+```
+Excluding actions not performed, pretty printing and outputing log file
+```
+SeleniumINICLI.py -i my_github.ini --exclude -o output.log --pprint
+```
+#### Running Dynamic Template
+Dynamic Templates are templates that were created however small changes may happen between templates.
+Dynamic Templates are the same as Static Templates except they contain value holders in the ini file.
+The value holders appear as <var_name> in the template file.
+When running dynamic template make sure to specify the --dynamic flag and pass in the correct variables.
+In this example my_github.ini contains two variables 'url' and 'user'. I filled in these place holders with 'google.com' and 'rascoro1'
+```
+SeleniumINICLI.py -i my_github.ini --dynamic "{'url': 'google.com', 'user':'rascoro1'}"
+```
+#### Running Batch
+This will run one after another.
+Templates can either be dynamic or static.
+```
+SeleniumINICLI.py -i github_batch.ini --batch
+```
+#### Running Concurrent
+Concurrent can only be run with a batch file
+Templates can either be dynamic or static.
+```
+SeleniumINICLI.py -i github_batch.ini --concurrent
+
+```
 ## Implementing the Template with SeleniumINI
 This is the easest part since creating the .ini is most of the work.<br />
 Initilize the Template then point the template object to the ini file.<br />
@@ -78,7 +136,3 @@ report = t.run()
 # And were not specificed in the template.
 t.pprint(exclude_none=True)
 ```
-
-
-
-
