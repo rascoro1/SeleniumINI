@@ -3,7 +3,8 @@ from selenium import webdriver
 import time
 from Section import Section
 from bcolors import bcolors
-
+import os
+import errors
 DRIVER_PATH = "/Users/copelanda1/PycharmProjects/ChangePassword/chromedriver"
 
 class Template():
@@ -23,18 +24,22 @@ class Template():
         :return: A list of the commands to execute
         """
         order = []
-
-        f = open(self.file_path, 'r')
+        if os.path.isfile(self.file_path):
+            f = open(self.file_path, 'r')
+        else:
+            raise errors.TemplatePathNotFoundException("The template path cannot be found. Specify the correct template.", 4)
         lines = f.readlines()
 
         for line in lines:
-            if line.startswith('[') and ']' in line:
+            # print "Line: {}".format(line)
+            if line.startswith('[') and line.rstrip().endswith(']'):
                 section_name = line.replace('[', '').replace(']', '').replace(' ', '').replace('\n', '')
                 print "Found section: {}".format(section_name)
-                order.append(section_name)
+                if section_name != 'general':
+                    order.append(section_name)
 
         f.close()
-
+        # print "order: {}".format(order)
         self.exec_order = order
 
     def set_template_path(self, path):
@@ -52,6 +57,10 @@ class Template():
         self.driver.get(self.general.url)
 
     def stop_driver(self):
+        """
+        Stop and close the driver
+        :return:
+        """
         self.driver.quit()
         self.driver = None
 
@@ -78,6 +87,8 @@ class Template():
         This method is invoked when running on the template is ready.
         :return: The report of the run
         """
+        print "Template dir: {}".format(dir(self))
+        print "Execution Order: {}".format(self.exec_order)
         report = {}
         time.sleep(float(self.general.start_wait))
         for section in self.exec_order:
@@ -104,3 +115,20 @@ class Template():
             for section_name in self.exec_order:
                 o_sec = getattr(self, section_name)
                 o_sec.pprint(exclude_none=exclude_none)
+
+    def append_log_report(self, log_fname, exclude):
+        """
+        Append the log report of all the sections of the template
+
+        :param log_fname: (string) Name of the log file.
+        :param exclude: (bool) (bool) Exclude section actions that were not performed/tried
+        :return: Create a log report of this template
+        """
+        f = open(log_fname, 'a')
+        f.write('~~########################~~\n')
+        f.write(self.file_path + '\n')
+        f.write('~~########################~~\n')
+        f.close()
+        for s in self.exec_order:
+            s = getattr(self, s)
+            s.append_log_report(log_fname, exclude)

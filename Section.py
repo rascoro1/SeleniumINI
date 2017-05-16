@@ -106,33 +106,10 @@ class Section():
         }
 
         element = self.find_element()
+
         if element is not None:
             self.element = element
             report['found'] = True
-
-            if self.send_keys is not False:
-                time.sleep(float(self.template.general.between_action_wait))
-                try:
-                    element.send_keys(self.send_keys)
-                    report['send_keys'] = True
-                except:
-                    report['send_keys'] = False
-
-            if self.click is not False:
-                time.sleep(float(self.template.general.between_action_wait))
-                try:
-                    element.click()
-                    report['click'] = True
-                except:
-                    report['click'] = False
-
-            if self.text is not False:
-                time.sleep(float(self.template.general.between_action_wait))
-                try:
-                    str_text = element.text
-                    report['text'] = str_text
-                except:
-                    report['text'] = False
 
             if self.clear is not False:
                 time.sleep(float(self.template.general.between_action_wait))
@@ -141,14 +118,6 @@ class Section():
                     report['clear'] = True
                 except:
                     report['clear'] = False
-
-            if self.submit is not False:
-                time.sleep(float(self.template.general.between_action_wait))
-                try:
-                    element.submit()
-                    report['submit'] = True
-                except:
-                    report['submit'] = False
 
             if self.get_attribute is not False:
                 time.sleep(float(self.template.general.between_action_wait))
@@ -181,6 +150,39 @@ class Section():
                     report['is_selected'] = res
                 except:
                     report['is_selected'] = False
+
+            if self.text is not False:
+                time.sleep(float(self.template.general.between_action_wait))
+                try:
+                    str_text = element.text
+                    report['text'] = str_text
+                except:
+                    report['text'] = False
+
+            if self.send_keys is not False:
+                time.sleep(float(self.template.general.between_action_wait))
+                try:
+                    element.send_keys(self.send_keys)
+                    report['send_keys'] = True
+                except:
+                    report['send_keys'] = False
+
+            if self.submit is not False:
+                time.sleep(float(self.template.general.between_action_wait))
+                try:
+                    element.submit()
+                    report['submit'] = True
+                except:
+                    report['submit'] = False
+
+            if self.click is not False:
+                time.sleep(float(self.template.general.between_action_wait))
+                try:
+                    element.click()
+                    report['click'] = True
+                except:
+                    report['click'] = False
+
         self.report = report
         return report
 
@@ -197,6 +199,12 @@ class Section():
         return element
 
     def pprint(self, exclude_none=False):
+        """
+        Pretty Print the report to the terminal
+
+        :param exclude_none: (bool) Exclude section actions that were not performed/tried
+        :return: prints out results to terminal
+        """
         if self.report is not False:
             if self.report['found'] is True:
                 print bcolors.OKGREEN + "##########################"
@@ -221,5 +229,35 @@ class Section():
                 elif value is not None and exclude_none is True:
                     print "{}\t{}: {}{}".format(color, key, value, bcolors.ENDC)
         else:
-            print "Please execute the section before pprinting it."
+            raise errors.NoReportFoundException("Please execute the element before trying to use pprint().", 2)
+
+    def append_log_report(self, log_fname, exclude_none=False):
+        """
+        Append the report to a log.
+
+        :param log_fname: (string) The name of the lag file
+        :param exclude_none: (bool) Exclude section actions that were not performed/tried
+        :return:
+        """
+        end_line = '\n'
+        hash_line = "##########################" + end_line
+        space = '      '
+
+        if self.report is not False:
+            f = open(log_fname, 'a')
+            f.write(hash_line)
+            f.write(self.name + end_line)
+            f.write(hash_line)
+
+            for key in self.report:
+                value = self.report[key]
+                if exclude_none is False:
+                    f.write("{}{}: {}{}".format(space, key, value, end_line))
+                elif value is not None and exclude_none is True:
+                    f.write("{}{}: {}{}".format(space, key, value, end_line))
+            f.close()
+
+        else:
+            raise errors.NoReportFoundException("Please execute the section before trying to use log_report().", 2)
+
 
