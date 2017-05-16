@@ -100,6 +100,8 @@ SeleniumINICLI.py -i my_github.ini --dynamic "{'url': 'google.com', 'user':'rasc
 #### Running Batch
 This will run one after another.
 Templates can either be dynamic or static.
+
+Take a look at the bithub_batch.ini file to create batch files.
 ```
 SeleniumINICLI.py -i github_batch.ini --batch
 ```
