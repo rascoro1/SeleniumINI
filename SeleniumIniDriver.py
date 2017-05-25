@@ -94,6 +94,8 @@ class SeleniumIniDriver():
         self.input_files = []
         self.temp_files = []
         self.keep_temps = False
+        self.easy_report = False
+        self.no_temp = False
 
     ##################################
     #        Check Methods             #
@@ -166,7 +168,7 @@ class SeleniumIniDriver():
         Check if concurrent is enabled and if so make sure a batch file was given
         :return:
         """
-        if self.concurrent is True:
+        if self.concurrent is not False:
             self.batch = True
             if self.batch is False:
                 raise errors.NoBatchFileWithConcurrentEnabled("Cannot run concurrent without batch file given.", 9041)
@@ -232,7 +234,9 @@ class SeleniumIniDriver():
     def run_concurrent(self):
         """Create worked os the run_dynamic method so they can run in parrell"""
         print "input_files: {}".format(self.input_files)
-        p = Pool(4)
+        p = Pool(self.concurrent)
+
+        # Get the arguments we will need for our process
         args = []
         for ini_dict in self.input_files:
             fname = ini_dict['fname']
@@ -241,9 +245,13 @@ class SeleniumIniDriver():
             args.append((fname, ini_dict, self.exclude, self.pprint))
         results = []
         for arg in args:
+            # Run the Pool
             results.append(p.apply_async(func_run_dynamic, arg))
         p.close()
         p.join()
+
+        # The results contain the new templates that were created
+        # Update the Driver with new templates
         templates = [r.get() for r in results]
         for t in templates:
             self.temp_files.append(t.file_path)
@@ -259,10 +267,13 @@ class SeleniumIniDriver():
             fname = ini_dict['fname']
             ini_dict.__delitem__('fname')
             fname = temp_to_orig_section(fname)
-            self.run_dynamic(fname, ini_dict)
+            if self.no_temp:
+                self.run_dynamic_no_temp(fname, ini_dict)
+            else:
+                self.run_dynamic_temp(fname, ini_dict)
 
 
-    def run_dynamic(self, input_file, dynamic_dic):
+    def run_dynamic_temp(self, input_file, dynamic_dic):
         """
         Execute one dynamic template
 
@@ -279,6 +290,33 @@ class SeleniumIniDriver():
         report = t.run()
         if self.pprint:
             t.pprint(exclude_none=self.exclude)
+
+        if self.easy_report:
+            t.easy_report(exclude_none=self.exclude)
+        self.templates.append(t)
+
+    def run_dynamic_no_temp(self, input_file, dynamic_dict):
+        """
+        Execute one dynamic template
+
+        :param input_file: (string) The template file name
+        :param dynamic_dic: (dict) The dictionary of the dynamic variables
+        :return:
+        """
+        t = Template.Template()
+        t.file_path = input_file
+        t.load_sections()
+        t.set_execute_order()
+        t.set_dynamic_vars(dynamic_dict)
+        t.start_driver()
+        report = t.run()
+
+        if self.pprint:
+            t.pprint(exclude_none=self.exclude)
+
+        if self.easy_report:
+            t.easy_report(exclude_none=self.exclude)
+
         self.templates.append(t)
 
     def run_normal(self):
@@ -295,6 +333,9 @@ class SeleniumIniDriver():
         report = t.run()
         if self.pprint:
             t.pprint(exclude_none=self.exclude)
+
+        if self.easy_report:
+            t.easy_report(exclude_none=self.exclude)
         self.templates.append(t)
 
     def run(self):
@@ -308,7 +349,7 @@ class SeleniumIniDriver():
         # if self.concurrent is True:
         #     self
 
-        if self.batch is True and self.concurrent is True:
+        if self.batch is True and self.concurrent is not False:
             print "Running Concurrent"
             self.run_concurrent()
         elif self.batch is True:
@@ -317,7 +358,10 @@ class SeleniumIniDriver():
         elif self.dynamic is not False:
             print "Running Dynamic"
             print "Dynamic: {}".format(self.dynamic)
-            self.run_dynamic(self.input_file, self.dynamic)
+            if self.no_temp:
+                self.run_dynamic_no_temp(self.input_file, self.dynamic)
+            else:
+                self.run_dynamic_temp(self.input_file, self.dynamic)
         elif self.input_file is not False:
             print "Running Normal"
             self.run_normal()

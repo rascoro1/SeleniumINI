@@ -15,7 +15,7 @@ if __name__ == "__main__":
     parser.add_argument('-b', '--batch', action='store_true',
                         help='Creating report from a batch amount of templates', default=False)
 
-    parser.add_argument('-c', '--concurrent', action='store_true',
+    parser.add_argument('-c', '--concurrent', type=int,
                         help='Only used when the --batch flag has been used, speficy the amount of concurrent browsers should be running at once.', default=False)
 
     parser.add_argument('-d', '--dynamic', type=str,
@@ -36,6 +36,12 @@ if __name__ == "__main__":
     parser.add_argument('-p', '--pprint', action='store_true',
                         help='The report pretty printed to terminal', default=False)
 
+    parser.add_argument('-er', '--easy-report', action='store_true',
+                        help='The report outputed to terminal for programmatic analyses', default=False)
+
+    parser.add_argument('-n', '--no-temp', action='store_true',
+                        help='Do not create temp files', default=False)
+
 
     args = parser.parse_args()
 
@@ -48,6 +54,8 @@ if __name__ == "__main__":
     sid.keep_temps = args.keep_temps
     sid.output_file = args.output_file
     sid.pprint = args.pprint
+    sid.easy_report = args.easy_report
+    sid.no_temp = args.no_temp
 
     err_header = bcolors.FAIL + "ERROR: " + bcolors.ENDC
 

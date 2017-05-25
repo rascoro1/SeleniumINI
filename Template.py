@@ -116,6 +116,15 @@ class Template():
                 o_sec = getattr(self, section_name)
                 o_sec.pprint(exclude_none=exclude_none)
 
+    def easy_report(self, exclude_none=False):
+        """
+        pretty print the report with nice and preetttyyy collors
+        """
+
+        for section_name in self.exec_order:
+            o_sec = getattr(self, section_name)
+            o_sec.easy_report(exclude_none=exclude_none)
+
     def append_log_report(self, log_fname, exclude):
         """
         Append the log report of all the sections of the template
@@ -132,3 +141,26 @@ class Template():
         for s in self.exec_order:
             s = getattr(self, s)
             s.append_log_report(log_fname, exclude)
+
+    def set_dynamic_vars(self, dynamic_dict):
+        sections = ['general']
+        sections.extend(self.exec_order)
+
+        for sec_name in sections:
+            o_sec = getattr(self, sec_name)
+            for attr_name in Section.VALID_ATTRIBUTES:
+                attr = getattr(o_sec, attr_name)
+                if attr is not None and attr is not False and attr is not True and isinstance(attr, (str, unicode)):
+                    attr = attr.strip()
+                    if '<' in attr and '>' in attr:
+                        # Attr is has a var placeholder
+                        front_attr, back_attr = attr.split('<', 1)
+                        attr, back_attr = back_attr.split('>', 1)
+
+                        if attr in dynamic_dict:
+                            # Attr was found in dynamic dict
+                            new_attr = "{}{}{}".format(front_attr, dynamic_dict[attr], back_attr)
+                            setattr(o_sec, attr_name, new_attr)
+                        else:
+                            errors.DynamicVariableNotFoundInTemplateException("Error: Attribute {} was found in Template but not in Dynamic input".format(attr), 1001)
+

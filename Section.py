@@ -231,6 +231,31 @@ class Section():
         else:
             raise errors.NoReportFoundException("Please execute the element before trying to use pprint().", 2)
 
+
+    def easy_report(self, exclude_none=False):
+        if self.report is not False:
+            res = ""
+            new_report = self.report
+            res += new_report['name'] + '|'
+            new_report.__delitem__('name')
+
+            key = 'found'
+            value = new_report[key]
+            str_key_value = "{}={}|".format(key, value)
+            res += str_key_value
+            new_report.__delitem__(key)
+
+            for key in new_report:
+                value = self.report[key]
+                str_key_value = "{}={}|".format(key, value)
+                if exclude_none is False:
+                    res += str_key_value
+                elif value is not None and exclude_none is True:
+                    res += str_key_value
+            print res
+        else:
+            raise errors.NoReportFoundException("Please execute the section before trying to use easy_report().", 2)
+
     def append_log_report(self, log_fname, exclude_none=False):
         """
         Append the report to a log.
